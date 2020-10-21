@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow
+  namespace: airflow-k8spodoperator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: airflow
+  template:
+    metadata:
+      labels:
+        name: airflow
+    spec:
+      automountServiceAccountToken: true
+      containers:
+      - args:
+        - webserver
+        - -p
+        - "8000"
+        env:
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          value: postgresql://postgres:password@airflow-db:5432/postgres
+        - name: AIRFLOW__CORE__EXECUTOR
+          value: LocalExecutor
+        - name: AIRFLOW__WEBSERVER__AUTHENTICATE
+          value: "True"
+        - name: AIRFLOW__WEBSERVER__AUTH_BACKEND
+          value: airflow.contrib.auth.backends.password_auth
+        - name: AIRFLOW__API__AUTH_BACKEND
+          value: airflow.contrib.auth.backends.password_auth
+        image: # Use your airflow docker image here, either selfbuilt with dags or apache/airflow:10.10.12
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 20
+          httpGet:
+            path: /admin/
+            port: 8000
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        name: airflow
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /admin/
+            port: 8000
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources: {}
+        volumeMounts:
+        - mountPath: /opt/airflow/logs/
+          mountPropagation: None
+          name: airflow-logs
+      - args:
+        - scheduler
+        env:
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          value: postgresql://postgres:password@airflow-db:5432/postgres
+        - name: AIRFLOW__CORE__EXECUTOR
+          value: LocalExecutor
+        image: # Use your airflow docker image here, either selfbuilt with dags or apache/airflow:10.10.12
+        imagePullPolicy: Always
+        name: airflow-scheduler
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /opt/airflow/logs/
+          mountPropagation: None
+          name: airflow-logs
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - args:
+        - initdb
+        env:
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          value: postgresql://postgres:password@airflow-db:5432/postgres
+        - name: AIRFLOW__CORE__EXECUTOR
+          value: LocalExecutor
+        image: # Use your airflow docker image here, either selfbuilt with dags or apache/airflow:10.10.12
+        imagePullPolicy: Always
+        name: airflow-initdb
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 600
+      volumes:
+      - emptyDir: {}
+        name: airflow-data
+      - emptyDir: {}
+        name: airflow-logs

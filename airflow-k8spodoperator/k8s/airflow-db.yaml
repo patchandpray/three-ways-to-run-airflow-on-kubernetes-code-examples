@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-db
+  namespace: airflow-k8spodoperator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: airflow-db
+  template:
+    metadata:
+      labels:
+        name: airflow-db
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_PASSWORD
+          value: password
+        image: postgres:9.6
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - psql
+            - -w
+            - -U
+            - postgres
+            - -d
+            - postgres
+            - -c
+            - SELECT 1
+          failureThreshold: 3
+          initialDelaySeconds: 45
+          periodSeconds: 2
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: airflow-db
+        readinessProbe:
+          exec:
+            command:
+            - psql
+            - -w
+            - -U
+            - postgres
+            - -d
+            - postgres
+            - -c
+            - SELECT 1
+          failureThreshold: 3
+          initialDelaySeconds: 15
+          periodSeconds: 3
+          successThreshold: 1
+          timeoutSeconds: 1
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          mountPropagation: None
+          name: postgresql-data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: postgresql-data

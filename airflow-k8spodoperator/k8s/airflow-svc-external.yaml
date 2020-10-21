@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-svc
+  namespace: airflow-k8spodoperator
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 31724
+    port: 80
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    name: airflow
+  sessionAffinity: None
+  type: LoadBalancer
