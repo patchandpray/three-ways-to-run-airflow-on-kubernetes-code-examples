@@ -2,8 +2,8 @@
 
 REGISTRY=
 GCP_PROJECT=
-IMAGE=st-airflow-executor
-TAG=latest
+IMAGE=
+TAG=
 PROJECT=
 
 build:
@@ -20,7 +20,7 @@ NAMESPACE=airflow-k8sexecutor
 configure_cluster: authenticate
 	kubectl config set-context --current --namespace=${NAMESPACE}
 
-CLUSTER_NAME=st-airflow-cluster
+CLUSTER_NAME=
 authenticate: 
 	gcloud container clusters get-credentials ${CLUSTER_NAME}
 

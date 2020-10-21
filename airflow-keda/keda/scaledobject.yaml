@@ -1,0 +1,16 @@
+apiVersion: keda.k8s.io/v1alpha1
+kind: ScaledObject
+metadata:
+  name: airflow-worker
+spec:
+  scaleTargetRef:
+    deploymentName: airflow-worker
+  pollingInterval: 10   # Optional. Default: 30 seconds
+  cooldownPeriod: 30    # Optional. Default: 300 seconds
+  maxReplicaCount: 10   # Optional. Default: 100
+  triggers:
+    - type: postgresql
+      metadata:
+        connection: AIRFLOW_CONN_AIRFLOW_DB
+        query: "SELECT ceil(COUNT(*)::decimal / 4) FROM task_instance WHERE state='running' OR state='queued'"
+        targetQueryValue: "1"

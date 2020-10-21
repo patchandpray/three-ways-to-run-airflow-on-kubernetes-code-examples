@@ -1,8 +1,10 @@
-REGISTRY=eu.gcr.io
-GCP_PROJECT=fullstaq-st-tim
-IMAGE=st-airflow
-TAG=latest
-PROJECT=fullstaq-st-tim
+# This makefile can be used to deploy infrastructure to a GKE cluster
+
+REGISTRY=
+GCP_PROJECT=
+IMAGE=
+TAG=
+PROJECT=
 
 build:
 	docker build -t ${IMAGE}:${TAG} .
@@ -18,7 +20,7 @@ NAMESPACE=airflow-k8spodoperator
 configure_cluster: authenticate
 	kubectl config set-context --current --namespace=${NAMESPACE}
 
-CLUSTER_NAME=st-airflow-cluster
+CLUSTER_NAME=
 authenticate: 
 	gcloud container clusters get-credentials ${CLUSTER_NAME}
 
