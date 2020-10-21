@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow
+  namespace: airflow-k8sexecutor
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    name: airflow
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
